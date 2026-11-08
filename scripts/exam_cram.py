@@ -93,6 +93,7 @@ def session_paths(root: Path):    return {
         "summary": root / "summary.md",
         "gaps": root / "gaps.md",
         "cheatsheet_md": root / "cheatsheet.md",
+        "cheatsheet_tex": root / "cheatsheet.tex",
         "cheatsheet_pdf": root / "cheatsheet.pdf",
         "cheatsheet_docx": root / "cheatsheet.docx",
     }
@@ -685,8 +686,12 @@ def cmd_coverage(args):
     state = load_state(root)
     md_path = Path(args.md).expanduser().resolve() if args.md else session_paths(root)["cheatsheet_md"]
     if not md_path.exists():
-        die(f"cheatsheet markdown not found: {md_path}")
-    text = md_path.read_text(encoding="utf-8")
+        tex = root / "cheatsheet.tex"
+        if tex.exists():
+            md_path = tex
+        else:
+            die(f"cheatsheet source not found: tried {md_path} and {tex}")
+    text = md_path.read_text(encoding="utf-8-sig")
     norm_text = norm_name(text)
     missing = []
     for t in state.get("topics", []):

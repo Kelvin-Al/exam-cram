@@ -14,7 +14,7 @@ The learner should spend most of the time recalling and practising, not reading.
 
 ## Operating rules
 
-1. **Work in a session folder.** Default `exam-cram/<course-slug>/` in the current workspace. Keep `state.json`, `sources.json`, `summary.md`, `mock/`, `cheatsheet.md`, and the final PDF there. Never write into the skill directory.
+1. **Work in a session folder.** Default `exam-cram/<course-slug>/` in the current workspace. Keep `state.json`, `sources.json`, `summary.md`, `mock/`, `cheatsheet.tex`, and the final PDF there. Never write into the skill directory.
 2. **Never reveal a mock answer, rubric, or hint unless the user asks.** After the user answers, acknowledge only; do not say whether it is right. The next action is theirs: `answer`, `next`, `hint`, or a self-grade.
 3. **Ground every claim in a source.** Tag summary claims with `[L1 p.4]`, `[Slide 7]`, `[HW2 Q3]`, or `[Sample Midterm Q1]`. Mark inferences as `(inferred)` and gaps as `(not in sources — verify)`.
 4. **Exactly 2 A4 sides** for the cheat sheet. 1 page double-sided = 2 printed sides. If the builder reports 3 pages, trim content; do not deliver an overlong sheet.
@@ -179,45 +179,42 @@ At the end, show:
 
 This prints a table with weight, attempts, accuracy, mastery, risk, and **suggested space %**. Use it as the space budget, not as a rigid rule: a high-weight topic with no attempts is "untested", not "mastered".
 
-### 5.2 Author `cheatsheet.md`
+### 5.2 Author `cheatsheet.tex`
 
-Use the format in `references/cheatsheet-format.md` and the starter in `templates/cheatsheet.md`.
+Copy `templates/cheatsheet.tex` to the session folder and fill in the content. Use the rules in `references/cheatsheet-format.md`; the key points:
 
-- **Side 1 — CORE + FORMULAS.** Highest-weight must-know material: definitions, formula bank with conditions, standard methods, one-line worked patterns, unit/sign conventions. Put the "if you only remember 8 things" box at the top.
-- **Side 2 — WEAK SPOTS + TRAPS.** Low-mastery topics, exam traps, discrimination tables ("when to use X vs Y"), decision trees, question archetypes, last-minute checklist.
-- Every topic from `state.json` appears at least once. Compress low-weight topics to a single line if necessary.
-- Use `★★★` (must know), `★★` (should know), `★` (nice to know). The builder colours them red/amber/blue.
-- On a short sheet, put `<!-- COLUMN -->` between sections to distribute them across the three columns; on a dense sheet, omit it and let the columns flow.
-- Keep bullets short: one idea per line, formulas on their own line. Put the condition next to the formula, not in a separate paragraph.
-- Tables: 2 columns for prose comparisons, 3 only for short numeric data. Table text is capped at ~6.2 pt.
-- Chinese + English is fine; use the course's language. Formulas can use Unicode and light LaTeX (`\frac`, `\sqrt`, `\mu`, `\omega`, `^{2}`, `_{net}`); the builder converts common commands to Unicode and true super/subscripts.
+- **Density first.** A real cram sheet is dense: each topic gets ~10–25 short lines of formulas, conditions, worked patterns, and traps. Write flowing inline-math (`$...$`) paragraphs that naturally wrap and fill each column — do not put one formula per line.
+- `\secH{3}{Title · weight}{meta}` per topic (3 = must-know red, 2 = amber, 1 = blue); `\subsec{}` for sub-blocks; `\trap` / `\tip` / `\examnt` / `\memorize` / `\noten` callouts; `\chk` for checklist items.
+- **Side 1 — CORE + FORMULAS** (highest-weight must-know); **Side 2 — WEAK SPOTS + TRAPS** (low-mastery topics, traps, discrimination tables, model quick-reference, last-minute checklist).
+- Every topic from `state.json` appears at least once (the builder checks this).
+- Do **not** insert `\columnbreak`; let multicol balance the columns.
+- Keep the `\AtBeginDocument{\fontsize{7pt}{8pt}\selectfont}` line — the builder adjusts it.
+- Formulas are real LaTeX (stacked fractions, `\sum`, `\int`, `\sqrt`, `\hat`); CJK works via xeCJK.
 
 ### 5.3 Build and fit
 
 ```powershell
 & "<python>" "<skill-dir>/scripts/build_cheatsheet.py" `
-  --md "exam-cram/phys101/cheatsheet.md" `
+  --tex "exam-cram/phys101/cheatsheet.tex" `
   --out "exam-cram/phys101/cheatsheet.pdf" `
-  --docx "exam-cram/phys101/cheatsheet.docx" `
   --state "exam-cram/phys101/state.json" `
   --json "exam-cram/phys101/build-report.json"
 ```
 
 The builder:
 
-1. renders a 3-column A4 DOCX with a full-width header band;
-2. converts to PDF with the bundled LibreOffice Kit;
+1. compiles the `.tex` with the **tectonic** LaTeX engine (auto-detected; see `references/cheatsheet-format.md` for install if missing);
+2. sweeps body font size from large to small and keeps the **largest size that still gives exactly 2 A4 pages**;
 3. renders PNG previews;
-4. searches typography between 1.50 and 0.88 for the largest scale that still gives exactly 2 pages;
-5. checks that every state topic appears in the Markdown.
+4. measures page fill and checks every state topic appears in the `.tex`.
 
 Read `build-report.json`:
 
-- `"status": "ok"`, `"pages": 2` → proceed to visual check.
-- `"status": "overflow"` (exit 4) → the content is too long even at the minimum scale. Cut duplication, merge low-yield topics, shorten examples; keep every topic at least once. Rebuild.
-- `"coverage.missing"` non-empty → add the missing topic names/IDs to `cheatsheet.md`. Rebuild.
-- `"underfull_pages"` present → add a formula bank, a worked pattern, a discrimination table, or traps. Do not pad with whitespace or repeat text.
-- `"status": "docx_only"` (exit 2) → LibreOffice Kit was not found. Build the DOCX, load `office-export-pdf` to convert, load `office-render` to count pages, and iterate the Markdown/scale manually. Do not deliver a 3-page PDF.
+- `"status": "ok"`, `"pages": 2`, `page_fill ≥ 0.7` → proceed to visual check.
+- `"status": "sparse"` → 2 pages but under-filled. **Add more exam-grade content** (formulas with conditions, worked patterns, traps, tables) and rebuild; do not ship a half-empty sheet.
+- `"status": "overflow"` (exit 4) → too long even at the minimum size. Cut duplication, merge low-yield topics, shorten examples; keep every topic at least once. Rebuild.
+- `"coverage.missing"` non-empty → add the missing topic names/IDs to `cheatsheet.tex`. Rebuild.
+- `tectonic not found` (exit 2) → install tectonic (`brew install tectonic`, or download the Windows binary — link in `references/cheatsheet-format.md`), or pass `--tectonic <path>`. Do not deliver a sparse or oversized PDF.
 
 ### 5.4 Visual check (required)
 
@@ -235,7 +232,7 @@ If a page is underfull, add a discrimination table, a worked pattern, or a "comm
 
 ### 5.5 Deliver
 
-Keep `cheatsheet.pdf` (primary), `cheatsheet.docx` (editable), and `cheatsheet-preview/page-*.png` (QA). Present the PDF and DOCX. In the final message, state:
+Keep `cheatsheet.pdf` (primary) and `cheatsheet-preview/page-*.png` (QA), and the `cheatsheet.tex` source for tweaks. Present the PDF. In the final message, state:
 
 - exactly 2 A4 sides;
 - topic coverage count (e.g. 12/12);
@@ -253,8 +250,8 @@ Keep `cheatsheet.pdf` (primary), `cheatsheet.docx` (editable), and `cheatsheet-p
 | `exam_cram.py record` | Record one mock attempt |
 | `exam_cram.py mastery` | Print mastery + suggested cheat-sheet space |
 | `exam_cram.py status` | Show session state and next action |
-| `exam_cram.py coverage` | Check every topic appears in `cheatsheet.md` |
-| `build_cheatsheet.py` | DOCX → PDF, fit to 2 pages, render previews |
+| `exam_cram.py coverage` | Check every topic appears in `cheatsheet.tex` |
+| `build_cheatsheet.py` | tectonic LaTeX → PDF, auto-fit to 2 pages, render previews |
 
 ## Quality bar
 
@@ -270,9 +267,9 @@ Before calling the task done:
 
 ## Files in this skill
 
-- `references/cheatsheet-format.md` — Markdown dialect, layout rules, troubleshooting.
+- `references/cheatsheet-format.md` — LaTeX authoring rules, build report, engine install, troubleshooting.
 - `references/mock-exam.md` — blueprint design, question writing, grading rubric, protocol examples.
 - `references/ingestion.md` — file-type fallbacks and source-map template.
 - `references/mastery.md` — mastery formula and how to interpret it.
-- `templates/summary.md`, `templates/cheatsheet.md`, `templates/topics.json` — starters.
+- `templates/summary.md`, `templates/cheatsheet.tex`, `templates/topics.json` — starters.
 - `scripts/exam_cram.py`, `scripts/build_cheatsheet.py` — deterministic helpers.
