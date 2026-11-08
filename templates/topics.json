@@ -1,0 +1,37 @@
+[
+  {
+    "id": "T1",
+    "name": "Kinematics",
+    "weight": 18,
+    "importance": 3,
+    "source_refs": ["L1 p.1-18", "Sample Midterm Q1"]
+  },
+  {
+    "id": "T2",
+    "name": "Newton's laws",
+    "weight": 22,
+    "importance": 3,
+    "source_refs": ["L2", "HW2 Q1-Q4"]
+  },
+  {
+    "id": "T3",
+    "name": "Energy and momentum",
+    "weight": 12,
+    "importance": 2,
+    "source_refs": ["L3", "HW3"]
+  },
+  {
+    "id": "T4",
+    "name": "Rotational dynamics",
+    "weight": 20,
+    "importance": 3,
+    "source_refs": ["L5", "HW4 Q2"]
+  },
+  {
+    "id": "T5",
+    "name": "Oscillations",
+    "weight": 14,
+    "importance": 2,
+    "source_refs": ["L8"]
+  }
+]

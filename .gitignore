@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+
+# DSH study sessions — generated from your own course materials; do not commit
+/exam-cram/
+/exam-cram-*/
+/.exam-cram-tmp/
+/cheatsheet-preview/
+/cheatsheet*.pdf
+/cheatsheet*.docx
+/sources.json
+/state.json
+/mastery.json
+/build-report.json
+/mock/
+/extracted/
+/summary.md
+/gaps.md
+/source-map.md
+/exam-blueprint.md
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
