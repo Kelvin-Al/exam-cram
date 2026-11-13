@@ -1,0 +1,160 @@
+% =====================================================================
+% exam-cram — STUDY NOTES PDF (multi-page, readable revision notes)
+% Compile:  tectonic study-notes.tex
+%
+% This is the "复习材料" deliverable: a properly typeset, multi-page
+% LaTeX document generated FROM the ingested lecture/homework material.
+% Unlike the 2-page cheat sheet, this one is READABLE: larger type,
+% chapters per topic, display formulas, worked examples, and callouts.
+%
+% AUTHORING RULES (the model that fills this in must follow):
+%  * One \section per topic (or major exam theme), \subsection for parts.
+%  * Use \defn{...} for definitions, \formula{...} for display formulas,
+%    \example{...} for worked examples, \warn{...} for common mistakes.
+%  * Everything must be grounded in the ingested sources; add source tags
+%    like (L1 p.4), (Slide 7), (HW2 Q3) at the end of items.
+%  * Keep the preamble unchanged; fill in \title/\date and the body.
+%  * Aim for one to several pages per topic; total length is natural
+%    (5–20 pages typical). No page-fitting is applied.
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage[table]{xcolor}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\usepackage{parskip}
+
+\setCJKmainfont[BoldFont={Microsoft YaHei UI Bold}]{Microsoft YaHei}
+\setCJKsansfont{Microsoft YaHei UI}
+
+% ---- colours ----
+\definecolor{navy}{HTML}{17324D}
+\definecolor{acc}{HTML}{1F5C99}
+\definecolor{ok}{HTML}{1F6B45}
+\definecolor{bad}{HTML}{B3261E}
+\definecolor{muted}{HTML}{5A6270}
+\definecolor{defnbg}{HTML}{E8F0F8}
+\definecolor{warnbg}{HTML}{FDECEA}
+\definecolor{exbg}{HTML}{F2EAF8}
+\definecolor{tipbg}{HTML}{E8F5EE}
+
+% ---- heading styles ----
+\titleformat{\section}{\Large\bfseries\color{navy}}{\thesection.}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{acc}}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{ink!85}}{\thesubsubsection.}{0.5em}{}
+\titlespacing*{\section}{0pt}{14pt plus 2pt}{6pt}
+\titlespacing*{\subsection}{0pt}{10pt plus 2pt}{4pt}
+
+% ---- header/footer ----
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{muted}\leftmark}
+\fancyhead[R]{\small\color{muted}\rightmark}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+
+% ---- reusable blocks ----
+% definition
+\newcommand{\defn}[1]{\par\vspace{3pt}\noindent
+  {\colorbox{defnbg}{\textcolor{acc}{\sffamily\bfseries 定义 / Definition}}\hspace{3pt}}%
+  \textit{#1}\par}
+% warning / common mistake
+\newcommand{\warn}[1]{\par\vspace{3pt}\noindent
+  {\colorbox{warnbg}{\textcolor{bad}{\sffamily\bfseries 易错 / Common error}}\hspace{3pt}}%
+  #1\par}
+% tip
+\newcommand{\tip}[1]{\par\vspace{3pt}\noindent
+  {\colorbox{tipbg}{\textcolor{ok}{\sffamily\bfseries 技巧 / Tip}}\hspace{3pt}}%
+  #1\par}
+% example
+\newenvironment{example}{%
+  \par\vspace{4pt}\noindent
+  \begin{minipage}{\dimexpr\linewidth-2\fboxsep-0.8em}%
+  \colorbox{exbg}{\textcolor{acc}{\sffamily\bfseries 例题 / Example}}\hspace{3pt}%
+  \ignorespaces
+}{\end{minipage}\par\vspace{2pt}}
+
+% ---- document ----
+\begin{document}
+
+% =====================================================================
+% TITLE
+% =====================================================================
+\begin{center}
+  {\LARGE\bfseries\color{navy} 课程名 —— 复习材料}\\[2pt]
+  {\large\color{muted} 考试：考试名 · 日期：YYYY-MM-DD · 时长/形式}\\[6pt]
+  {\small\color{muted} 依据讲义与作业整理 · 来源标注 (L1 p.4) = 讲义1第4页, (Slide 7), (HW2 Q3) 等}
+\end{center}
+\vspace{4pt}
+{\color{navy}\hrule height 1pt}\vspace{6pt}
+
+\tableofcontents
+\clearpage
+
+% =====================================================================
+% TOPIC 1
+% =====================================================================
+\section{主题一：名称}
+
+% 总体一句话
+\begin{quote}
+  <本主题一句话概括：它解决什么问题、考试里怎么出现>
+\end{quote}
+
+\subsection{核心概念}
+\defn{<定义1>（(L1 p.4)）}
+\defn{<定义2>（(Slide 3)）}
+
+<解释性段落，用自己的话把讲义里的逻辑讲清楚。可以分多段，每段 2–4 行。>
+
+\subsection{公式与条件}
+\begin{align}
+  <公式1> \quad \text{条件：} <条件> \label{eq:1}
+\end{align}
+
+\begin{align}
+  <公式2> \quad \text{适用：} <何时用> \label{eq:2}
+\end{align}
+
+\tip{<快速记忆/检查技巧>}
+
+\subsection{典型例题（来自讲义/作业）}
+\begin{example}
+\textbf{例 1（(HW2 Q3)）：}<题目描述>
+
+\textbf{解：}<分步解答，最后给出答案形式>
+\end{example}
+
+\subsection{常见错误}
+\warn{<错误1 及正确做法>}
+\warn{<错误2 及正确做法>}
+
+% =====================================================================
+% TOPIC 2 — 依此类推，每个主题一节
+% =====================================================================
+\section{主题二：名称}
+...
+
+% =====================================================================
+% FINAL: 公式总表 / 复习清单
+% =====================================================================
+\section*{附：公式总表}
+\begin{center}
+\begin{tabular}{@{}p{0.32\linewidth}p{0.32\linewidth}p{0.32\linewidth}@{}}
+\toprule
+\textbf{公式} & \textbf{适用条件} & \textbf{常见错误} \\
+\midrule
+$<公式>$ & $<条件>$ & $<错误>$ \\
+... & ... & ... \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\end{document}

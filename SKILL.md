@@ -83,7 +83,7 @@ Set the stage:
 & "<python>" "<skill-dir>/scripts/exam_cram.py" stage --dir "exam-cram/phys101" --set ingest
 ```
 
-## Stage 2 — Write the concise summary
+## Stage 2 — Write the concise summary + study-notes PDF
 
 Create `summary.md` from `templates/summary.md` (or the structure below). Target **1,200–2,500 words** or roughly 10–15% of the source; hard cap 3,000 words. A summary is not a transcript.
 
@@ -101,6 +101,28 @@ Required structure:
 4. **Formula bank** — table: formula, when to use, conditions, common mistake.
 5. **Question archetypes** — table: pattern → recognition cue → standard method → marks.
 6. **Gaps** — unresolved questions, conflicting sources, topics with no practice.
+
+### 2.1 Also produce the study-notes PDF (复习材料)
+
+The user expects a **readable, LaTeX-typeset revision document** generated from the ingested material, in addition to the summary. From the same content:
+
+1. Copy `templates/study-notes.tex` to the session folder as `study-notes.tex` and fill it in:
+   - one `\section` per topic (or exam theme), with `\defn{}` definitions, `\align` display formulas, `\begin{example}` worked examples, `\warn{}` common errors, `\tip{}` memory aids;
+   - keep every source tag like `(L1 p.4)` / `(Slide 7)` / `(HW2 Q3)`;
+   - a final "公式总表" (formula summary table) and a closing revision checklist;
+   - readable 11pt type, multi-page (typically 5–20 pages); **no** page-fitting is applied.
+2. Build it:
+
+```powershell
+& "<python>" "<skill-dir>/scripts/build_study_notes.py" `
+  --tex "exam-cram/phys101/study-notes.tex" `
+  --out "exam-cram/phys101/study-notes.pdf" `
+  --json "exam-cram/phys101/study-notes-report.json"
+```
+
+3. The report shows `pages` and preview images; inspect a few with `read_image` to confirm headings, formulas, tables, and CJK render correctly.
+
+Deliver `study-notes.pdf` alongside `summary.md`. This is the revision document the user reads while studying; the cheat sheet (Stage 5) is the separate last-minute sheet.
 
 After writing, send a short message with the table of contents, the 3 highest-yield ideas, and one question: "Which section should we stress-test first?" Do **not** paste the whole summary into chat unless asked. Set stage `summary`.
 
@@ -252,6 +274,7 @@ Keep `cheatsheet.pdf` (primary) and `cheatsheet-preview/page-*.png` (QA), and th
 | `exam_cram.py status` | Show session state and next action |
 | `exam_cram.py coverage` | Check every topic appears in `cheatsheet.tex` |
 | `build_cheatsheet.py` | tectonic LaTeX → PDF, auto-fit to 2 pages, render previews |
+| `build_study_notes.py` | tectonic LaTeX → multi-page study-notes PDF (复习材料) |
 
 ## Quality bar
 
@@ -271,5 +294,5 @@ Before calling the task done:
 - `references/mock-exam.md` — blueprint design, question writing, grading rubric, protocol examples.
 - `references/ingestion.md` — file-type fallbacks and source-map template.
 - `references/mastery.md` — mastery formula and how to interpret it.
-- `templates/summary.md`, `templates/cheatsheet.tex`, `templates/topics.json` — starters.
-- `scripts/exam_cram.py`, `scripts/build_cheatsheet.py` — deterministic helpers.
+- `templates/summary.md`, `templates/cheatsheet.tex`, `templates/study-notes.tex`, `templates/topics.json` — starters.
+- `scripts/exam_cram.py`, `scripts/build_cheatsheet.py`, `scripts/build_study_notes.py` — deterministic helpers.

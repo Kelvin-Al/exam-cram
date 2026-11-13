@@ -5,6 +5,10 @@ the font so the output is exactly **two A4 pages** (1 sheet, both sides).
 Formula quality is true LaTeX: stacked fractions, real super/subscripts,
 \sum, \int, \sqrt, \hat, etc.
 
+There is a second, separate deliverable: **study-notes.pdf** (复习材料), a
+readable multi-page revision document compiled from `study-notes.tex` by
+`build_study_notes.py` — see the "Study notes" section at the end.
+
 ## Workflow
 
 1. Copy `templates/cheatsheet.tex` to the session folder as `cheatsheet.tex`.
@@ -103,3 +107,32 @@ First run downloads the LaTeX format (a few tens of MB), cached under
 - CJK boxes → the `xeCJK` font is set to Microsoft YaHei; on Linux/macOS
   change `\setCJKmainfont` to an installed CJK font (Noto Sans CJK SC,
   PingFang SC).
+
+## Study notes PDF (复习材料)
+
+Separate from the cheat sheet, the skill also produces **study-notes.pdf** —
+a readable, multi-page LaTeX document built from the ingested material.
+
+Author `study-notes.tex` from `templates/study-notes.tex`:
+
+- `\section` per topic (or exam theme), `\subsection` for parts;
+- `\defn{...}` definitions, `\align`/`\begin{align}` display formulas,
+  `\begin{example}...\end{example}` worked examples, `\warn{...}` common
+  errors, `\tip{...}` memory aids;
+- source tags everywhere: `(L1 p.4)`, `(Slide 7)`, `(HW2 Q3)`;
+- end with a "公式总表" (formula summary table) and a revision checklist;
+- readable 11pt, multi-page (5–20 pages typical); **no** auto-fitting — the
+  document's length is natural.
+
+Build with:
+
+```powershell
+& "<python>" "<skill-dir>/scripts/build_study_notes.py" `
+  --tex "exam-cram/phys101/study-notes.tex" `
+  --out "exam-cram/phys101/study-notes.pdf" `
+  --json "exam-cram/phys101/study-notes-report.json"
+```
+
+The report carries `pages` and `preview_images`; visually spot-check a few
+pages (headings, formulas, tables, CJK) before delivering. `tectonic` is the
+same engine used for the cheat sheet (auto-detected; see "Engine install").

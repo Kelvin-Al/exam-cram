@@ -7,7 +7,8 @@ A DSH skill that turns lecture notes, slides, homework, and sample exams into a 
 3. write a concise, source-tagged summary;
 4. discuss it interactively (tutoring mode);
 5. run a mock exam **one question at a time**, with no answers volunteered;
-6. build a priority-weighted **two-sided A4 cheat sheet** (exactly 2 pages, dense 3-column LaTeX layout) plus PNG previews.
+6. build a readable **study-notes.pdf** (复习材料, multi-page LaTeX) from the ingested material;
+7. build a priority-weighted **two-sided A4 cheat sheet** (exactly 2 pages, dense 3-column LaTeX layout) plus PNG previews.
 
 ## Install
 
@@ -50,6 +51,12 @@ Restarting DSH is not required; the skill provider watches the roots. The `exam-
 & "<python>" "<skill-dir>/scripts/exam_cram.py" mastery `
   --dir "exam-cram/phys101" --write
 
+# build the study notes PDF (multi-page 复习材料, tectonic LaTeX)
+& "<python>" "<skill-dir>/scripts/build_study_notes.py" `
+  --tex "exam-cram/phys101/study-notes.tex" `
+  --out "exam-cram/phys101/study-notes.pdf" `
+  --json "exam-cram/phys101/study-notes-report.json"
+
 # build the cheat sheet (tectonic LaTeX -> PDF, auto-fit to 2 pages)
 & "<python>" "<skill-dir>/scripts/build_cheatsheet.py" `
   --tex "exam-cram/phys101/cheatsheet.tex" `
@@ -77,10 +84,12 @@ exam-cram/
   templates/
     summary.md                   summary scaffold
     cheatsheet.tex               two-sided LaTeX starter (dense 3-col)
+    study-notes.tex              multi-page 复习材料 LaTeX starter
     topics.json                  topic schema
   scripts/
     exam_cram.py                 init / ingest / record / mastery / status / coverage
     build_cheatsheet.py          tectonic LaTeX -> PDF, auto-fit to 2 pages, previews
+    build_study_notes.py         tectonic LaTeX -> multi-page study-notes PDF
 ```
 
 ## Design notes
@@ -88,6 +97,7 @@ exam-cram/
 - **One question at a time** is enforced by the skill contract, not by a UI. The agent is told exactly what to show, what to record, and what never to reveal. The answer key lives in `mock/key.json`; the model may read it only when the user asks for `answer`.
 - **Mastery is evidence, not a grade.** It combines weighted accuracy, coverage, and self-confidence; untested is `None`, not zero. The `space_pct` output is a budget for the cheat sheet, not a hard layout.
 - **The cheat sheet is real LaTeX.** `build_cheatsheet.py` compiles `cheatsheet.tex` with tectonic, so formulas get true stacked fractions, `\sum`/`\int`/`\sqrt`, real super/subscripts, and CJK via xeCJK. The builder picks the largest font size that still fits exactly two A4 pages and reports `sparse` when the page is under-filled — density is the design goal.
+- **Study notes are a separate readable PDF.** `build_study_notes.py` compiles `study-notes.tex` into a multi-page revision document (定义/公式/例题/易错), so the user gets both a revision PDF and a last-minute sheet.
 - **Coverage is checked literally.** Every `state.json` topic must appear by ID or full name in `cheatsheet.tex`; the builder reports missing topics before delivery.
 - **Vision is the fallback, not the default.** Text extraction is cheap and keeps page citations; rendered images are used for scanned PDFs, diagrams, and handwriting.
 
