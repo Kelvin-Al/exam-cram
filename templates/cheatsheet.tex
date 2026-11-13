@@ -1,144 +1,53 @@
 % =====================================================================
-% exam-cram cheat sheet — LaTeX template (A4, 2 sides, dense 3 columns)
-% Compile:  tectonic cheatsheet.tex   (build_cheatsheet.py does this +
-% auto-fits the body font size so the PDF is exactly 2 A4 pages)
+% exam-cram cheat sheet — SINGLE COLUMN, minimal LaTeX template
 %
-% AUTHORING RULES (the model that fills this in must follow):
-%  * One \secH per topic:  \secH{3}{Title · weight}{meta}
-%      priority 3 = must-know (red), 2 = should-know (amber), 1 = nice (blue)
-%  * Small sub-blocks: \subsec{...}
-%  * Callouts: \trap ...  \tip ...  \examnt ...  \memorize ...  \noten ...
-%  * Checklist line: \chk item text
-%  * DENSITY: pack formulas and facts into FLOWING inline-math paragraphs;
-%    do NOT put one formula per line. Aim for a real cram-sheet density:
-%    ~10-25 lines of content per topic. Blank lines separate blocks.
-%  * Let the multicol environment balance the three columns by itself;
-%    do not insert \columnbreak (it causes overflow pages).
-%  * The line  \AtBeginDocument{\fontsize{7pt}{8pt}\selectfont}  is where
-%    the build script adjusts the type size to fit exactly 2 pages.
+% No columns. No decoration. No header/footer. No colours, no boxes, no
+% lines, no bullets, no stars. One flowing column per A4 page, all text
+% at one font size; a topic title is just a bold line in the same size.
+%
+% Authoring (model MUST follow):
+%   \topic{T1 收益率度量（8\%）}
+%   $1+R_t=P_t/P_{t-1}$，$R_t=(P_t-P_{t-1})/P_{t-1}$。对数收益
+%   $r_t=\ln(1+R_t)=p_t-p_{t-1}$。……
+%   (blank line between topics, one \clearpage between the two sides)
+%
+% * Single column, flowing paragraphs; topics separated by a bold line.
+% * Write ENOUGH content to fill BOTH sides (~half to three quarters of a
+%   page of dense formulas + facts per topic). A half-empty page is a
+%   defect — add more real material.
+% * No \head, \subsec, \chk, itemize, enumerate, multicol, boxes, colours.
+% * Build script rewrites the \AtBeginDocument fontsize line and inserts
+%   the active size after \begin{document}.
 % =====================================================================
 \documentclass[10pt,a4paper]{article}
 
-\usepackage[margin=4.5mm]{geometry}
+\usepackage[margin=12mm]{geometry}
 \usepackage{amsmath,amssymb,mathtools}
-\usepackage{multicol}
-\usepackage{array,booktabs}
-\usepackage[table]{xcolor}
-\usepackage{enumitem}
 \usepackage{fontspec}
 \usepackage{xeCJK}
-\usepackage{parskip}
 
 \setCJKmainfont[BoldFont={Microsoft YaHei UI Bold}]{Microsoft YaHei}
 
-% ---- density ----
 \pagestyle{empty}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0pt}
-\setlength{\columnsep}{2.2mm}
-\setlength{\columnseprule}{0.2pt}
-\linespread{0.82}
-\setlist{nosep,leftmargin=1em,topsep=0pt,parsep=0pt,itemsep=0pt}
+\linespread{1.05}
 
-% ---- colours ----
-\definecolor{ink}{HTML}{1A1A1A}
-\definecolor{muted}{HTML}{5A6270}
-\definecolor{navy}{HTML}{17324D}
-\definecolor{gold}{HTML}{FFD566}
-\definecolor{p3}{HTML}{B3261E}
-\definecolor{p2}{HTML}{B26A00}
-\definecolor{p1}{HTML}{1F5C99}
-\definecolor{trapbg}{HTML}{FDECEA}\definecolor{trapfg}{HTML}{B3261E}
-\definecolor{tipbg}{HTML}{E8F5EE}\definecolor{tipfg}{HTML}{1F6B45}
-\definecolor{exambg}{HTML}{E8F0F8}\definecolor{examfg}{HTML}{1F5C99}
-\definecolor{membg}{HTML}{F2EAF8}\definecolor{memfg}{HTML}{6A3D9A}
-\definecolor{notebg}{HTML}{F1F3F5}
+\newcommand{\topic}[1]{\par\vspace{2.2mm}{\bfseries #1}\par\vspace{0.8mm}}
 
-% ---- header band ----
-\newcommand{\cheatsheetHeader}[3]{%
-  \noindent\colorbox{navy}{%
-    \parbox{\dimexpr\linewidth-2\fboxsep-0.4em}{\color{white}\sffamily\bfseries\large #1%
-      \hfill \color{white!80}\normalfont\scriptsize #2\ \hspace{0.5em}\color{gold}\sffamily\bfseries\small #3}}%
-  \par\vspace{1.2mm}}
-
-% ---- priority section heading ----
-\newcommand{\secH}[3]{%
-  \par\vspace{1.0mm}\noindent
-  {\sffamily\bfseries\small\color{p#1}#2 \normalfont\scriptsize\color{muted}#3\par}%
-  \vspace{-0.2mm}{\color{p#1}\hrule height 0.6pt}\vspace{0.6mm}}
-
-\newcommand{\subsec}[1]{%
-  \par\vspace{0.5mm}{\sffamily\bfseries\footnotesize\color{ink!85}#1}\par}
-
-% ---- inline callouts ----
-\newcommand{\callout}[3]{\par\vspace{0.5mm}\noindent
-  \colorbox{#1}{\textcolor{#2}{\sffamily\bfseries\footnotesize #3}}\hspace{2pt}\ignorespaces}
-\newcommand{\trap}{\callout{trapbg}{trapfg}{TRAP}}
-\newcommand{\tip}{\callout{tipbg}{tipfg}{TIP}}
-\newcommand{\examnt}{\callout{exambg}{examfg}{EXAM}}
-\newcommand{\memorize}{\callout{membg}{memfg}{MEMO}}
-\newcommand{\noten}{\callout{notebg}{muted}{NB}}
-
-\newcommand{\chk}{$\square$\;}
-\newcommand{\kw}[1]{\textbf{#1}}
-\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
-
-% ---- body size: build script lowers this to fit exactly 2 pages ----
-\AtBeginDocument{\fontsize{7pt}{8pt}\selectfont}
+% ---- body size: build script rewrites this ----
+\AtBeginDocument{\fontsize{10pt}{12.5pt}\selectfont}
 
 \begin{document}
 
-% =====================================================================
-% SIDE 1 — CORE + FORMULAS
-% =====================================================================
-\cheatsheetHeader{{课程名} · CORE + FORMULAS}{{考试} · {日期}}{SIDE 1/2}
+% ---------------- SIDE 1 : FORMULAS ----------------
+\topic{T1 主题名（权重）}
+% 内容，多个句子，流式排版……
 
-\begin{multicols}{3}
-
-\secH{3}{Topic 1 — 名称}{权重}
-\subsec{定义与要点}
-正文与公式混排，例如 $R_t=\dfrac{P_t}{P_{t-1}}-1$，$\gamma_k=\sigma^2\sum_j a_ja_{j+k}$。多个公式用 $\quad$ 或逗号连接在同一行，让文本自然换行填满栏宽，不要一行一个公式。
-
-第二段：$\hat\rho_k=\dfrac{\hat\gamma_k}{\hat\gamma_0}$，$\sqrt{n}$，$\int_{-\pi}^{\pi}f\,d\lambda=\gamma_0$。
-\trap 常见错误与正确做法。
-
-\secH{3}{Topic 2 — 名称}{权重}
-\subsec{核心关系}
-$x^2$、$e^{ik\lambda}$、$\alpha+\beta<1$、$\bar\sigma^2=\dfrac{\omega}{1-\alpha-\beta}$，条件写在公式旁边。
-\tip 检查单位。
-
-... 继续填写 8–15 个 topic，直到几乎填满两页三栏（build 脚本会用字体大小自动适配）。 ...
-
-\end{multicols}
 \clearpage
 
-% =====================================================================
-% SIDE 2 — TRAPS + QUICK REFERENCE
-% =====================================================================
-\cheatsheetHeader{{课程名} · TRAPS + QUICK REF}{{考试} · {日期}}{SIDE 2/2}
-
-\begin{multicols}{3}
-
-\secH{3}{Topic 5 — 弱项}{权重}
-内容……
-\chk 手算 $\rho_1,\rho_2,\gamma_0$
-
-\secH{2}{模型速查表}{}
-\begin{center}\scriptsize
-\begin{tabular}{@{}L{1.4cm}L{2.5cm}L{1.9cm}L{2.2cm}@{}}
-\toprule
-\textbf{模型} & \textbf{条件} & \textbf{ACF} & \textbf{PACF} \\
-\midrule
-A & 条件1 & 拖尾 & 截尾 \\
-B & 条件2 & 截尾 & 拖尾 \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\secH{1}{考前 3 分钟}{}
-\chk 默写三个公式与临界值
-\chk 手算 $\rho_1,\rho_2,\gamma_0$
-
-\end{multicols}
+% ---------------- SIDE 2 : TESTS + CONCEPTS ----------------
+\topic{T2 主题名（权重）}
+% 内容……
 
 \end{document}

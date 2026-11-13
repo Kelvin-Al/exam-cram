@@ -152,7 +152,11 @@ def main(argv=None):
     if result.returncode != 0 or not produced.exists():
         err = (result.stderr or result.stdout or "")[-2500:]
         raise SystemExit(f"tectonic compile failed: {err}")
-    shutil.copyfile(produced, out_pdf)
+    if produced.resolve() != out_pdf.resolve():
+        out_pdf.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(produced, out_pdf)
+    else:
+        out_pdf = produced
 
     pages = None
     preview_images = []

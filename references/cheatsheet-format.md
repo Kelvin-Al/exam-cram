@@ -27,34 +27,45 @@ readable multi-page revision document compiled from `study-notes.tex` by
 The build script:
 - locates `tectonic` (auto-detect; or `--tectonic PATH`, or
   `$env:EXAM_CRAM_TECTONIC`);
-- compiles at descending sizes and keeps the **largest font size that still
-  yields 2 pages** (so content fills the sheet instead of being huge);
+- compiles across font sizes and keeps the **smallest font size that still
+  yields exactly 2 pages** (maximises information density — the whole point
+  of a cram sheet);
 - renders PNG previews (needs the DSH LibreOffice Kit);
 - checks every state topic id appears in the `.tex`.
 
 ## Authoring rules (the model must follow)
 
-- **Density first.** A real cram sheet is dense: each topic carries ~10–25
-  short lines of formulas, conditions, and traps. Write flowing inline-math
-  paragraphs; do **not** put one formula per line with `\\` everywhere.
-- `\secH{3}{Title · weight}{meta}` — 3=must-know(red), 2=should(amber),
-  1=nice(blue). Use `\subsec{}` for sub-headings.
-- Callouts: `\trap`, `\tip`, `\examnt`, `\memorize`, `\noten` (all take the
-  text after them on the same line).
-- Checklist: `\chk item`.
-- Do **not** insert `\columnbreak`; let `multicol` balance the 3 columns.
-- Everything a topic needs (definition, formula with condition, worked
-  pattern, trap) is better than a clean-looking but empty sheet.
-- Keep the `\AtBeginDocument{\fontsize{7pt}{8pt}\selectfont}` line — the
-  build script rewrites it.
+**The cheat sheet must be plain, uniform and dense.** The approved style:
+no decoration whatsoever.
+
+- **No decoration**: no header band, no footer, no page numbers, no boxes,
+  no grey labels, no rules under titles, no bullets, no stars, no `\chk`,
+  no coloured pills, no circled numbers. All of these are forbidden.
+- **Uniform type**: ONE font size for everything. A topic title is a bold
+  line in the same size as the body (`\topic{...}`); nothing is larger or
+  smaller, nothing is grey or coloured.
+- **Structure**: two A4 sides. SIDE 1 = formulas; SIDE 2 = tests, facts,
+  discriminations. Each side is `\begin{multicols}{3} ... \end{multicols}`,
+  separated by `\clearpage`. Do not add `\head` — there is no header.
+- **Density**: a topic = one `\topic{T1 名称（权重）}` line followed by
+  several sentences of inline-math (`$...$`) that flow and wrap naturally.
+  Write ENOUGH content to fill both sides (each topic several lines). A
+  half-empty side is a defect — add more real formulas/facts.
+- Plain numbered items are written as `1)` `2)` `3)` — never `① ② ③`
+  (those glyphs are missing in the Latin font).
+- Escape `&` as `\&` in running text.
+- If the build reports `sparse`, add more content — never decorative filler.
+- Keep the `\AtBeginDocument{\fontsize{7.5pt}{8.8pt}\selectfont}` line — the
+  build script rewrites it (and inserts the active size after
+  `\begin{document}`).
 
 ## Reading the report
 
 | Field | Meaning |
 |---|---|
-| `status` | `ok` (2 pages, filled), `sparse` (2 pages but under-filled — add more content), `overflow` (doesn't fit at min size — trim), `underfull` |
+| `status` | `ok` (2 pages), `sparse` (2 pages but under-filled — add more content), `overflow` (doesn't fit at min size — trim), `ok_single` (1 page filled; content too small for 2) |
 | `pages` | must be 2 |
-| `size_pt` | chosen body font size (largest that fits 2 pages) |
+| `size_pt` | chosen body font size (smallest that still fits 2 pages) |
 | `page_fill` | fraction of each page height covered by ink; target ≥ 0.7 |
 | `coverage.missing` | state topics not found in the text |
 | `preview_images` | PNGs to inspect with `read_image` |

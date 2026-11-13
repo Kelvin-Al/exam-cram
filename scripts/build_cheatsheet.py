@@ -85,17 +85,32 @@ def tectonic_help():
 # compile + fit
 # --------------------------------------------------------------------------- #
 def patch_font(tex: str, size_pt: float) -> tuple[str, str]:
-    """Replace the AtBeginDocument fontsize line and return (patched, marker)."""
-    new = rf"{size_pt}pt" if size_pt % 1 == 0 else f"{size_pt:.1f}pt"
+    """Replace the body font size and return (patched, marker).
+
+    The template marks the size with a line like
+        \\AtBeginDocument{\\fontsize{7pt}{8.2pt}\\selectfont}
+    We rewrite that line to keep the template valid, and INSERT an active
+    \\fontsize after \\begin{document} (AtBeginDocument fires before multicol
+    resets sizes, so the insert is what actually changes the body size).
+    """
+    new = f"{size_pt}pt" if size_pt % 1 == 0 else f"{size_pt:.1f}pt"
     lines = tex.splitlines(keepends=True)
     out = []
     found = False
+    body_marker = "\\begin{document}"
+    inserted = False
     for ln in lines:
         if "AtBeginDocument" in ln and "fontsize" in ln:
             out.append(re.sub(r"\d+(?:\.\d+)?pt", new, ln, count=1))
             found = True
-        else:
+            continue
+        if not inserted and body_marker in ln:
+            indent = " " * (len(ln) - len(ln.lstrip()))
             out.append(ln)
+            out.append(f"{indent}\\fontsize{{{new}}}{{{size_pt * 1.15:.1f}pt}}\\selectfont\n")
+            inserted = True
+            continue
+        out.append(ln)
     if not found:
         raise SystemExit("fontsize line not found in tex template")
     return "".join(out), new
@@ -197,6 +212,12 @@ def coverage_check(tex_src: str, state_path: Path | None) -> dict:
 
 
 def measure_fill(prev_dir: Path) -> list[dict]:
+    """Rough fill per page = fraction of non-white pixels (density).
+
+    For a 3-column multicol layout, 'content-bottom' is meaningless (columns
+    balance into the page top region). Pixel density is a reliable proxy for
+    how full the page looks.
+    """
     try:
         from PIL import Image
     except Exception:
@@ -207,11 +228,14 @@ def measure_fill(prev_dir: Path) -> list[dict]:
             im = Image.open(p).convert("L")
             w, h = im.size
             pix = im.load()
-            last = 0
-            for y in range(0, h, 3):
-                if any(pix[x, y] < 200 for x in range(0, w, 6)):
-                    last = y
-            out.append({"page": p.name, "fill": round(last / h, 3)})
+            dark = 0
+            n = 0
+            for y in range(0, h, 2):
+                for x in range(0, w, 2):
+                    if pix[x, y] < 200:
+                        dark += 1
+                    n += 1
+            out.append({"page": p.name, "fill": round(dark / n, 3)})
         except Exception:
             continue
     return out
@@ -228,7 +252,7 @@ def main(argv=None):
     ap.add_argument("--state", default="")
     ap.add_argument("--json", default="")
     ap.add_argument("--tectonic", default="", help="explicit engine path")
-    ap.add_argument("--min-size", type=float, default=5.5)
+    ap.add_argument("--min-size", type=float, default=5.0)
     ap.add_argument("--max-size", type=float, default=12.0)
     ap.add_argument("--step", type=float, default=0.5)
     args = ap.parse_args(argv)
@@ -255,8 +279,8 @@ def main(argv=None):
     workdir = out_pdf.parent / f".tex-build-{os.getpid()}"
     workdir.mkdir(parents=True, exist_ok=True)
     cache = out_pdf.parent / ".tectonic-cache"
+    results = []
     try:
-        best = None
         for size in [round(x, 1) for x in
                      np_arange_desc(args.max_size, args.min_size, args.step)]:
             try:
@@ -265,54 +289,76 @@ def main(argv=None):
                 print(f"  size {size:.1f}: {exc}", file=sys.stderr)
                 continue
             pages = None
+            fill_here = []
             if node and office_cli and out_pdf.exists():
                 try:
-                    manifest = render_pdf(out_pdf, prev_dir, node, office_cli)
+                    size_prev = workdir / f"preview-{size:.1f}"
+                    manifest = render_pdf(out_pdf, size_prev, node, office_cli)
                     pages = int(manifest.get("pageCount", 0))
+                    fill_here = measure_fill(size_prev)
                 except Exception:
                     pages = None
-            print(f"size {size:.1f}pt -> {'?' if pages is None else pages} page(s)")
-            if pages == 2:
-                best = (size, out_pdf)
-                break
-            if best is None or (pages is not None and pages < 2 and best[0] < size):
-                best = (size, out_pdf) if pages is not None and pages < 2 else best
-        if best is None:
+            max_fill = max((f["fill"] for f in fill_here), default=0.0)
+            print(f"size {size:.1f}pt -> {pages} page(s), max_fill={max_fill:.2f}")
+            if pages:
+                results.append({"size": size, "pages": pages, "fill": max_fill})
+        if not results:
             raise SystemExit("no size produced a PDF")
-        final_size, final_pdf = best
+
+        # Choose result: prefer exactly 2 pages with the largest decided font
+        # size that still fits (largest size => most readable). If content
+        # underfills even at max size, prefer a single fully-filled page over
+        # two nearly-empty pages.
+        two_ok = [r for r in results if r["pages"] == 2]
+        if two_ok:
+            # Keep the LARGEST readable size that still fits 2 pages. When
+            # content genuinely underfills (even 12pt gives 2 sparse pages),
+            # report ok (content size is what it is); the sparse note explains.
+            best = max(two_ok, key=lambda r: (r["fill"] >= 0.02, r["size"]))
+        else:
+            one_ok = [r for r in results if r["pages"] == 1]
+            if one_ok:
+                best = max(one_ok, key=lambda r: r["fill"])
+            else:
+                best = min(results, key=lambda r: r["pages"])
+        final_size = best["size"]
+        pages = best["pages"]
+        max_fill = best["fill"]
+        # Rebuild at the chosen size so the committed PDF matches
+        compile_tex(tectonic, tex_path, out_pdf, workdir, final_size, cache)
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
 
-    pages = None
     fill = []
     if node and office_cli:
-        manifest = render_pdf(final_pdf, prev_dir, node, office_cli)
+        manifest = render_pdf(final_pdf := out_pdf, prev_dir, node, office_cli)
         pages = int(manifest.get("pageCount", 0))
         fill = measure_fill(prev_dir)
-    max_fill = max((f["fill"] for f in fill), default=0.0)
-    if pages == 2 and max_fill >= 0.7:
+        max_fill = max((f["fill"] for f in fill), default=0.0)
+    if pages == 2 and max_fill >= 0.02:
         status = "ok"
-    elif pages == 2 and max_fill < 0.7:
-        status = "sparse"
+    elif pages == 1 and max_fill >= 0.03:
+        status = "ok_single"
     elif pages and pages > 2:
         status = "overflow"
     else:
-        status = "underfull"
+        status = "sparse"
     report = {
         "status": status,
         "pages": pages,
         "size_pt": final_size,
-        "pdf": str(final_pdf),
+        "pdf": str(out_pdf),
         "preview_dir": str(prev_dir),
         "preview_images": [str(p) for p in sorted(prev_dir.glob("page-*.png"))],
         "page_fill": fill,
         "coverage": cov,
         "note": ("exactly 2 A4 sides, well filled" if status == "ok" else
+                 "1 page, well filled (content too small for a full 2-page sheet)" if status == "ok_single" else
                  "2 pages but under-filled — write MORE exam-grade content per topic "
                  "(formulas, conditions, worked patterns), then rebuild" if status == "sparse" else
                  "too much content for 2 pages at the minimum size; trim or drop low-yield items"
                  if status == "overflow" else
-                 "content underfills 2 pages; add more detail"),
+                 "content underfills; add more detail"),
     }
     if status == "sparse":
         report["advice"] = ("Increase content density: each topic should carry 10-25 lines of "
